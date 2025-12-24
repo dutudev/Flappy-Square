@@ -67,6 +67,7 @@ int main(){
 	float playerRotation = 0;
 	float timeToSpawnWall = 0;
 	int score = 0;
+	bool started = false;
 	float scoreTextAnim = 1;
 	const Rectangle sourceRectangle = { 0, 0, playerTexture.width, playerTexture.height };
 	Rectangle playerRec = { playerPosition.x, playerPosition.y, playerSize.x, playerSize.y};
@@ -74,53 +75,65 @@ int main(){
 	while (!WindowShouldClose()) {
 
 		//logic
-		if (IsKeyPressed(KEY_SPACE)) {
-			playerYSpeed = JUMPSPEED;
-		}
-
-		playerYSpeed += FALLSPEED * GetFrameTime();
-		playerPosition.y += playerYSpeed * GetFrameTime();
-		if (playerPosition.y <= 16) {
+		if (!started) {
 			playerYSpeed = 0;
-			playerPosition.y = 16;
-		}
-
-		for (wall& eWall : walls) {
-			eWall.Logic(playerPosition, score, scoreTextAnim);
-		}
-
-		if (scoreTextAnim < 1) {
-			scoreTextAnim += GetFrameTime() / 1.5f;
-		}
-		else {
-			scoreTextAnim = 1;
-		}
-
-		if (timeToSpawnWall <= 0) {
-			timeToSpawnWall = GetRandomValue(2, 3);
-			walls.push_back(wall());
-		}
-		else {
-			timeToSpawnWall -= GetFrameTime();
-		}
-
-		for (wall& eWall : walls) {
-			if (CheckCollisionRecs(playerRec, eWall.ReturnRec(1)) || CheckCollisionRecs(playerRec, eWall.ReturnRec(2))) {
-				walls.clear();
-				playerSize = { 32, 32 };
-				playerPosition = { GetScreenWidth() / 2.0f - playerSize.x / 2.0f, GetScreenHeight() / 2.0f - playerSize.y / 2.0f };
-				playerYSpeed = 0;
-				playerRotation = 0;
-				timeToSpawnWall = 0;
-				score = 0;
-				break;
+			playerPosition.y = GetScreenHeight() / 2.0f - playerSize.y / 2.0f;
+			if (IsKeyPressed(KEY_SPACE)) {
+				started = true;
 			}
 		}
-		//add death when fall
+		else {
+			if (IsKeyPressed(KEY_SPACE)) {
+				playerYSpeed = JUMPSPEED;
+			}
 
-		while (!walls.empty() && !walls.front().isActive()) {
-			walls.erase(walls.begin());
+			playerYSpeed += FALLSPEED * GetFrameTime();
+			playerPosition.y += playerYSpeed * GetFrameTime();
+			if (playerPosition.y <= 16) {
+				playerYSpeed = 0;
+				playerPosition.y = 16;
+			}//else if(playerPosition.y)
+
+			for (wall& eWall : walls) {
+				eWall.Logic(playerPosition, score, scoreTextAnim);
+			}
+
+			if (scoreTextAnim < 1) {
+				scoreTextAnim += GetFrameTime() / 1.5f;
+			}
+			else {
+				scoreTextAnim = 1;
+			}
+
+			if (timeToSpawnWall <= 0) {
+				timeToSpawnWall = GetRandomValue(2, 3);
+				walls.push_back(wall());
+			}
+			else {
+				timeToSpawnWall -= GetFrameTime();
+			}
+
+			for (wall& eWall : walls) {
+				if (CheckCollisionRecs(playerRec, eWall.ReturnRec(1)) || CheckCollisionRecs(playerRec, eWall.ReturnRec(2))) {
+					walls.clear();
+					playerSize = { 32, 32 };
+					playerPosition = { GetScreenWidth() / 2.0f - playerSize.x / 2.0f, GetScreenHeight() / 2.0f - playerSize.y / 2.0f };
+					playerYSpeed = 0;
+					playerRotation = 0;
+					timeToSpawnWall = 0;
+					score = 0;
+					started = false;
+					break;
+				}
+			}
+			//add death when fall
+
+			while (!walls.empty() && !walls.front().isActive()) {
+				walls.erase(walls.begin());
+			}
 		}
+		
+		
 
 		//drawing
 		BeginDrawing();
@@ -139,7 +152,12 @@ int main(){
 			eWall.Draw();
 		}
 		//draw score
-		DrawTextEx(robotoFont, std::to_string(score).c_str(), { GetScreenWidth() / 2.0f - MeasureTextEx(robotoFont, std::to_string(score).c_str(), Lerp(64, 48, easeOutExpo(scoreTextAnim)), 0).x / 2.0f, 80 - MeasureTextEx(robotoFont, std::to_string(score).c_str(), Lerp(64, 48, easeOutExpo(scoreTextAnim)), 0).y / 2.0f }, Lerp(64, 48, easeOutExpo(scoreTextAnim)), 0, WHITE);
+		if (!started) {
+			DrawTextEx(robotoFont, "Press Space to start", {GetScreenWidth() / 2.0f - MeasureTextEx(robotoFont, "Press Space to start", 64, 0).x / 2.0f, 80 - MeasureTextEx(robotoFont, "Press Space to start", 64, 0).y / 2.0f}, 64, 0, WHITE);
+		}
+		else {
+			DrawTextEx(robotoFont, std::to_string(score).c_str(), { GetScreenWidth() / 2.0f - MeasureTextEx(robotoFont, std::to_string(score).c_str(), Lerp(64, 48, easeOutExpo(scoreTextAnim)), 0).x / 2.0f, 80 - MeasureTextEx(robotoFont, std::to_string(score).c_str(), Lerp(64, 48, easeOutExpo(scoreTextAnim)), 0).y / 2.0f }, Lerp(64, 48, easeOutExpo(scoreTextAnim)), 0, WHITE);
+		}
 		EndDrawing();
 	}
 	return 0;
