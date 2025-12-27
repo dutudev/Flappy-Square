@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+
 class wall {
 public :
 	wall() {
@@ -46,7 +47,7 @@ float easeOutExpo(float x){
 	return x == 1 ? 1 : 1 - pow(2, -10 * x);
 }
 
-int main(){
+int WinMain(){
 	std::string playerImageLocation = (std::string)GetWorkingDirectory() + "\\assets\\player.png";
 	std::string fontLocation = (std::string)GetWorkingDirectory() + "\\assets\\RobotoMono-SemiBold.ttf";
 	Image playerImage = LoadImage(playerImageLocation.c_str());
@@ -80,6 +81,7 @@ int main(){
 			playerPosition.y = GetScreenHeight() / 2.0f - playerSize.y / 2.0f;
 			if (IsKeyPressed(KEY_SPACE)) {
 				started = true;
+				score = 0;
 			}
 		}
 		else {
@@ -92,7 +94,16 @@ int main(){
 			if (playerPosition.y <= 16) {
 				playerYSpeed = 0;
 				playerPosition.y = 16;
-			}//else if(playerPosition.y)
+			}
+			else if (playerPosition.y >= GetScreenHeight() + 32) {
+				walls.clear();
+				playerSize = { 32, 32 };
+				playerPosition = { GetScreenWidth() / 2.0f - playerSize.x / 2.0f, GetScreenHeight() / 2.0f - playerSize.y / 2.0f };
+				playerYSpeed = 0;
+				playerRotation = 0;
+				timeToSpawnWall = 0;
+				started = false;
+			}
 
 			for (wall& eWall : walls) {
 				eWall.Logic(playerPosition, score, scoreTextAnim);
@@ -121,7 +132,6 @@ int main(){
 					playerYSpeed = 0;
 					playerRotation = 0;
 					timeToSpawnWall = 0;
-					score = 0;
 					started = false;
 					break;
 				}
@@ -154,6 +164,11 @@ int main(){
 		//draw score
 		if (!started) {
 			DrawTextEx(robotoFont, "Press Space to start", {GetScreenWidth() / 2.0f - MeasureTextEx(robotoFont, "Press Space to start", 64, 0).x / 2.0f, 80 - MeasureTextEx(robotoFont, "Press Space to start", 64, 0).y / 2.0f}, 64, 0, WHITE);
+			if (score != 0) {
+				std::string lastScoreString = "Last Score : " + std::to_string(score);
+				Vector2 stringPos = MeasureTextEx(robotoFont, lastScoreString.c_str(), 64, 0);
+				DrawTextEx(robotoFont, lastScoreString.c_str(), { GetScreenWidth() / 2.0f - stringPos.x / 2.0f, 120 - stringPos.y / 2.0f }, 64, 0, WHITE);
+			}
 		}
 		else {
 			DrawTextEx(robotoFont, std::to_string(score).c_str(), { GetScreenWidth() / 2.0f - MeasureTextEx(robotoFont, std::to_string(score).c_str(), Lerp(64, 48, easeOutExpo(scoreTextAnim)), 0).x / 2.0f, 80 - MeasureTextEx(robotoFont, std::to_string(score).c_str(), Lerp(64, 48, easeOutExpo(scoreTextAnim)), 0).y / 2.0f }, Lerp(64, 48, easeOutExpo(scoreTextAnim)), 0, WHITE);
